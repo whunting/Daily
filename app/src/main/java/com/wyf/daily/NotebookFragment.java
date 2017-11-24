@@ -9,7 +9,10 @@ import android.view.View;
 import android.view.ViewGroup;
 
 /**
- * Created by 11512 on 2017/10/31.
+ * 功能：小本本
+ *
+ * @author wifi9984
+ * @date 2017/11/17
  */
 
 public class NotebookFragment extends Fragment {
