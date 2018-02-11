@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.DividerItemDecoration;
@@ -14,9 +15,6 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
-import android.widget.Button;
-import android.widget.PopupWindow;
 
 import java.util.ArrayList;
 
@@ -24,29 +22,26 @@ import java.util.ArrayList;
  *  EventsFragment来呈现“所有事项”界面
  *
  *  @author wifi9984
- *  @date 2017/8/31
+ *  @date 2017/12/22
  */
 
-public class EventsFragment extends android.app.Fragment implements View.OnClickListener,SwipeRefreshLayout.OnRefreshListener{
+public class EventsFragment extends android.app.Fragment
+        implements View.OnClickListener,SwipeRefreshLayout.OnRefreshListener {
 
     private FloatingActionButton fab_add;
     private SwipeRefreshLayout srl_main;
     private EventsDBHelper mHelper;
     protected View mView;
-    protected View popView;
     protected Context mContext;
     private RecyclerView mRecyclerView;
     private EventsAdapter mAdapter;
-    private PopupWindow popDeleteItem;
-    private Button btn_delete_item;
-    public int x,y;
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         mContext = getActivity();
         mHelper = EventsDBHelper.getInstance(mContext,1);
-        mView = inflater.inflate(R.layout.events_fragment,container,false);
+        mView = inflater.inflate(R.layout.fragment_events,container,false);
         init();
         return mView;
     }
@@ -67,23 +62,12 @@ public class EventsFragment extends android.app.Fragment implements View.OnClick
         mHelper.closeLink();
     }
 
-    void init(){
-        fab_add = mView.findViewById(R.id.fab_add);
+    void init() {
+        fab_add = mView.findViewById(R.id.fab_add_event);
         srl_main = mView.findViewById(R.id.srl_main);
         fab_add.setOnClickListener(this);
         srl_main.setOnRefreshListener(this);
         srl_main.setColorSchemeResources(R.color.indigo400,R.color.colorPrimaryDark);
-        WindowManager wm = this.getActivity().getWindowManager();
-        popDeleteItem = new PopupWindow(this.getActivity());
-        popDeleteItem.setWidth(wm.getDefaultDisplay().getWidth()/8);
-        popDeleteItem.setHeight(wm.getDefaultDisplay().getHeight()/20);
-        popDeleteItem.setBackgroundDrawable(null);
-        popView = View.inflate(getActivity(),R.layout.pop_delete_item,null);
-        popDeleteItem.setContentView(popView);
-        popDeleteItem.setOutsideTouchable(false);
-        popDeleteItem.setFocusable(true);
-        btn_delete_item = popView.findViewById(R.id.btn_delete_pop);
-        btn_delete_item.setOnClickListener(this);
         // RecyclerView初始化
         mRecyclerView = mView.findViewById(R.id.rv_events);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity(),LinearLayoutManager.VERTICAL,false){
@@ -104,7 +88,6 @@ public class EventsFragment extends android.app.Fragment implements View.OnClick
         mAdapter.setOnItemLongClickListener(new EventsAdapter.OnItemLongClickListener() {
             @Override
             public void onItemLongClick(View v, int position) {
-                popDeleteItem.showAsDropDown(v);
             }
         });
         mRecyclerView.setAdapter(mAdapter);
@@ -113,22 +96,19 @@ public class EventsFragment extends android.app.Fragment implements View.OnClick
     }
 
     @Override
-    public void onClick(View v){
-        if(v.getId() == R.id.fab_add){
+    public void onClick(View v) {
+        if(v.getId() == R.id.fab_add_event){
             Intent intent = new Intent(getActivity(),NewEventActivity.class);
-            startActivity(intent);
+            ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation
+                    (this.getActivity(), fab_add, "transition_morph_view_add");
+            startActivity(intent, options.toBundle());
             onStop();
-        }else if(v.getId() == R.id.btn_delete_pop){
-            // 执行SQLite的delete方法
-            // getPosition存储选中的item的position
-            popDeleteItem.dismiss();
         }
-
     }
 
     private Handler mHandler = new Handler();
     @Override
-    public void onRefresh(){
+    public void onRefresh() {
         mHandler.postDelayed(mRefresh,750);
         mAdapter.onDataUpdate(mHelper.allEvents(mHelper.getReadableDatabase()));
     }
